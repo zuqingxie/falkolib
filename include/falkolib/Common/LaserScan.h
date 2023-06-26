@@ -36,10 +36,10 @@ namespace falkolib {
 		/**
 		 * @brief Constructor
 		 */
-		LaserScan() {
+		LaserScan() { // 可以在头文件也可以在cpp文件里面赋值
 			angleMin = 0;
 			fov = 0;
-			angleInc = 0;
+			angleInc = 0; // 没一个beam的角度, 0.25
 			numBeams = 0;
 			timestamp = 0;
 		}
@@ -126,12 +126,12 @@ namespace falkolib {
 		 * @param midIndex index representing the central point in the neigh vector
 		 */
 		void getNeighPoints(int candIndex, double radius, std::vector<Point2d>& neigh, int& midIndex) const {
-			const Point2d& candPoint = points[candIndex];
-			int alpha = std::floor(std::asin(radius / ranges[candIndex]) / angleInc);
+			const Point2d& candPoint = points[candIndex]; //取出点的坐标
+			int alpha = std::floor(std::asin(radius / ranges[candIndex]) / angleInc); //得到左右平移的个数
 			int begIndex = std::max(0, candIndex - alpha);
 			int endIndex = std::min(candIndex + alpha + 1, numBeams);
 			for (int i = begIndex; i <= endIndex; ++i) {
-				if (pointsDistance(points[i], candPoint) <= radius) {
+				if (pointsDistance(points[i], candPoint) <= radius) { //小于半径的点才会被考虑哦
 					if (i == candIndex) {
 						midIndex = neigh.size();
 					}

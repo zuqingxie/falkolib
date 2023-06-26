@@ -25,25 +25,25 @@
 using namespace std;
 
 namespace falkolib {
-
     FALKOExtractor::FALKOExtractor() {
+        //construciton default value setting.
         minScoreTh = 50;
-        minExtractionRange = 0;
-        maxExtractionRange = 30;
+        minExtractionRange = 0;  //ok
+        maxExtractionRange = 30; //ok
         subbeam = true;
-        NMSRadius = 0.1;
-        neighA = 0.1;
-        neighB = 0.07;
-        neighMinPoint = 2;
+        NMSRadius = 0.1; // ok
+        neighA = 0.1; // ok
+        neighB = 0.07; //ok
+        neighMinPoint = 2; // ok
         bRatio = 2.5;
         gridSectors = 16;
     }
 
     void FALKOExtractor::extract(const LaserScan& scan, std::vector<FALKO>& keypoints) {
         const int numBeams = scan.getNumBeams();
-        vector<int> scores(numBeams, -10);
-        vector<Point2d> neigh;
-        vector<double> radius(numBeams);
+        vector<int> scores(numBeams, -10); // 1440个都初始化为-10
+        vector<Point2d> neigh;  //Point2d = Eigen::Vector2d 向量的向量,表达临的所有点的集合
+        vector<double> radius(numBeams); // 创建1440个半径值
         int neighSize;
         int neighSizeL;
         int neighSizeR;
@@ -58,45 +58,45 @@ namespace falkolib {
         vector<int> neighCircularIndexesL;
         vector<int> neighCircularIndexesR;
 
-        for (int ind = 0; ind < numBeams; ++ind) {
-            if (scan.ranges[ind] < minExtractionRange || scan.ranges[ind] > maxExtractionRange) {
-                scores[ind] = -10;
+        for (int ind = 0; ind < numBeams; ++ind) { //循环1440
+            if (scan.ranges[ind] < minExtractionRange || scan.ranges[ind] > maxExtractionRange) { //[1,30]之外
+                scores[ind] = -10; //这个beam对应的分数保持初始化的 -10
                 continue;
             }
             neigh.clear();
-            radius[ind] = getNeighRadius(scan.ranges[ind]);
-            scan.getNeighPoints(ind, radius[ind], neigh, midIndex);
+            radius[ind] = getNeighRadius(scan.ranges[ind]);// 根据这个beam获得它选择临近点的半径
+            scan.getNeighPoints(ind, radius[ind], neigh, midIndex); // 获得临近点,都写入了neigh, 该ind在neigh里面的排第几写在了midIndex里面
             neighSize = neigh.size();
 
-            neighSizeL = midIndex;
-            neighSizeR = neighSize - midIndex - 1;
+            neighSizeL = midIndex; // neighSizeL表示往左边数的个数
+            neighSizeR = neighSize - midIndex - 1; //neighSizeR 表示往右边数的个数
 
-            if (neighSizeL < neighMinPoint || neighSizeR < neighMinPoint) {
+            if (neighSizeL < neighMinPoint || neighSizeR < neighMinPoint) { //这个点左右两边的临近点数量不可以小于2
                 scores[ind] = -10;
                 continue;
             }
 
-            triangleBLength = pointsDistance(neigh.front(), neigh.back());
-            triangleHLength = std::abs(signedTriangleArea(neigh[midIndex], neigh.front(), neigh.back())) / triangleBLength;
+            triangleBLength = pointsDistance(neigh.front(), neigh.back()); // 地一个和最后一个点的距离
+            triangleHLength = std::abs(signedTriangleArea(neigh[midIndex], neigh.front(), neigh.back())) / triangleBLength; //三角形的高
 
-            if (triangleBLength < (radius[ind] / bRatio) || triangleHLength < (radius[ind] / bRatio)) {
+            if (triangleBLength < (radius[ind] / bRatio) || triangleHLength < (radius[ind] / bRatio)) { //如果三角形的底和高有一个不满足条件,排除
                 scores[ind] = -10;
                 continue;
             }
 
-            thetaCorner[ind] = getCornerOrientation(neigh, midIndex);
+            thetaCorner[ind] = getCornerOrientation(neigh, midIndex); //从这里开始都可以称作为corner了,计算出角所指的方向.
 
-            neighCircularIndexesL.resize(neighSizeL, 0);
+            neighCircularIndexesL.resize(neighSizeL, 0); //初始化整数向量,大小是左右两边邻点个数
             neighCircularIndexesR.resize(neighSizeR, 0);
 
             for (int i = 0; i < neighSizeL; ++i) {
-                neighCircularIndexesL[i] = getCircularSectorIndex(neigh[i], neigh[midIndex], thetaCorner[ind]);
+                neighCircularIndexesL[i] = getCircularSectorIndex(neigh[i], neigh[midIndex], thetaCorner[ind]); //找到对应的16分区的扇型区域
             }
             for (int i = 0; i < neighSizeR; ++i) {
                 neighCircularIndexesR[i] = getCircularSectorIndex(neigh[midIndex + i + 1], neigh[midIndex], thetaCorner[ind]);
             }
 
-            scoreL = 0;
+            scoreL = 0; //这又是啥分呢?
             scoreR = 0;
 
             for (int i = midIndex - 1; i >= 0; --i) {
@@ -118,7 +118,7 @@ namespace falkolib {
             }
         }
 
-        for (int ind = 0; ind < numBeams; ++ind) {
+        for (int ind = 0; ind < numBeams; ++ind) { // 小于0 的等于0 ,大于0 的等于 scoreMax-scores[ind],可问题是最大的值也变成了0
             if (scores[ind] < 0) {
                 scores[ind] = scoreMax;
             }
@@ -177,7 +177,7 @@ namespace falkolib {
         Point2d ori = oriL + oriR;
         double theta = atan2(ori(1), ori(0));
     }
-
+    //non-maximum-suppression
     void FALKOExtractor::NMSKeypoint(const std::vector<int>& scores, const LaserScan& scan, unsigned int ibeg, unsigned int iend, double radius, int minval, std::vector<int>& peaks) {
         unsigned i, imax;
         unsigned j, jbeg, jend, jmax;
@@ -188,7 +188,7 @@ namespace falkolib {
         imax = ibeg;
         while (i < iend) {
             int win;
-            if (radius >= scan.ranges[i]) {
+            if (radius >= scan.ranges[i]) { // radius = 0.1
                 win = std::floor(std::asin(0.8) / scan.getAngleInc());
             } else {
                 win = std::floor(std::asin(radius / scan.ranges[i]) / scan.getAngleInc());

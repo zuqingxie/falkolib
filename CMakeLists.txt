@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8) 
 project(falkolib)
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 add_definitions(-std=c++0x)   # Enabling c++11
 
 SET(falkolib_RUNTIME_OUTPUT_DIRECTORY ${falkolib_SOURCE_DIR}/bin CACHE PATH "Target for the binaries")

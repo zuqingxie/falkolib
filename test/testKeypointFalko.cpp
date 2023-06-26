@@ -37,8 +37,8 @@ using namespace std;
 using namespace falkolib;
 
 int main(int argc, char** argv) {
-	FALKOExtractor fe;
-	fe.setMinExtractionRange(1);
+	FALKOExtractor fe;  // 创建了extractor,有自己的一个出是值
+	fe.setMinExtractionRange(1); //0->1
 	fe.setMaxExtractionRange(30);
 	fe.enableSubbeam(true);
 	fe.setNMSRadius(0.1);
@@ -46,12 +46,12 @@ int main(int argc, char** argv) {
 	fe.setBRatio(2.5);
 	fe.setGridSectors(16);
 
-	LaserScan scan1(-0.003316126, 2.0 * M_PI, 1440);
-	scan1.fromRanges(testRanges);
+	LaserScan scan1(-0.003316126, 2.0 * M_PI, 1440); //double angleMin [rad], double fov, int numBeams
+	scan1.fromRanges(testRanges); //设计完角度之后设计距离
 	LaserScan scan2(-0.003316126, 2.0 * M_PI, 1440);
-	scan2.fromRanges(testRanges2);
+	scan2.fromRanges(testRanges2);  //这边就得到了points所有点的xy坐标.当然也有角度和距离的坐标
 
-	std::vector<FALKO> keypoints1;
+	std::vector<FALKO> keypoints1; 		// FALKO: [int]index [double]radius [double] orientation;
 	std::vector<FALKO> keypoints2;
 
 
@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
 	bsc.compute(scan2, keypoints2, bscDesc2);
 	
 	
-	
+	// 直接用FALKO keypoint匹配也是可以的
 	cout << endl;
 	NNMatcher<FALKO> matcher;
 	matcher.setDistanceThreshold(0.1);
@@ -89,9 +89,10 @@ int main(int argc, char** argv) {
 			std::cout << "i1: " << i1 << "\ti2: " << i2 << "\t keypoints distance: " << (keypoints1[i1].distance(keypoints2[i2])) << "\t CHG Distance: " << (cghDesc1[i1].distance(cghDesc2[i2])) << "\t BSC Distance: " << (bscDesc1[i1].distance(bscDesc2[i2])) << endl;
 		}
 	}
-	
+
+	//FALKO + binary shape context
 	cout << endl;
-	NNMatcher<FALKO, BSC> matcherFALKOBSC;
+	NNMatcher<FALKO, BSC> matcherFALKOBSC; 
 	matcherFALKOBSC.setDistanceThreshold(0.1);
 	matcherFALKOBSC.setDescriptorThreshold(15);
 	std::cout << "num matching NN FALKO BSC: " << matcherFALKOBSC.match(keypoints1, bscDesc1, keypoints2, bscDesc2, asso) << endl;
@@ -103,6 +104,7 @@ int main(int argc, char** argv) {
 		}
 	}
 	
+	// FALKO + CGH
 	cout << endl;
 	NNMatcher<FALKO, CGH> matcherFALKOCGH;
 	matcherFALKOCGH.setDistanceThreshold(0.1);
@@ -116,6 +118,7 @@ int main(int argc, char** argv) {
 		}
 	}
 	
+	// 
 	cout << endl;
 	NNMatcher<BSC> matcherBSC;
 	matcherBSC.setDistanceThreshold(15);

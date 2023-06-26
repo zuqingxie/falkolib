@@ -43,6 +43,7 @@ namespace falkolib {
 		 */
 		void extract(const LaserScan& scan, std::vector<FALKO>& keypoints);
 
+		// inline 直接是内建了,不会调用函数,而是compile的时候直接用源代码!!对于需要用到很多读写的代码很有帮助
 		/** @brief Set minimum score threshold for a candidate keypoint [%]*/
 		inline void setMinScoreTh(double _minScoreTh) {
 			minScoreTh = _minScoreTh;
